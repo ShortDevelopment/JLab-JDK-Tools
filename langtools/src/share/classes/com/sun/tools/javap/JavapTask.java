@@ -53,30 +53,27 @@ import java.util.ResourceBundle;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticListener;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.StandardLocation;
+import javax.tools.*;
 
 import com.sun.tools.classfile.*;
+
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 
 /**
- *  "Main" class for javap, normally accessed from the command line
- *  via Main, or from JSR199 via DisassemblerTool.
+ * "Main" class for javap, normally accessed from the command line
+ * via Main, or from JSR199 via DisassemblerTool.
  *
- *  <p><b>This is NOT part of any supported API.
- *  If you write code that depends on this, you do so at your own risk.
- *  This code and its internal interfaces are subject to change or
- *  deletion without notice.</b>
+ * <p><b>This is NOT part of any supported API.
+ * If you write code that depends on this, you do so at your own risk.
+ * This code and its internal interfaces are subject to change or
+ * deletion without notice.</b>
  */
 public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
     public class BadArgs extends Exception {
         static final long serialVersionUID = 8765093759964640721L;
+
         BadArgs(String key, Object... args) {
             super(JavapTask.this.getMessage(key, args));
             this.key = key;
@@ -100,7 +97,7 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
         }
 
         boolean matches(String opt) {
-            for (String a: aliases) {
+            for (String a : aliases) {
                 if (a.equals(opt))
                     return true;
             }
@@ -119,185 +116,185 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
 
     static final Option[] recognizedOptions = {
 
-        new Option(false, "-help", "--help", "-?") {
-            void process(JavapTask task, String opt, String arg) {
-                task.options.help = true;
-            }
-        },
+            new Option(false, "-help", "--help", "-?") {
+                void process(JavapTask task, String opt, String arg) {
+                    task.options.help = true;
+                }
+            },
 
-        new Option(false, "-version") {
-            void process(JavapTask task, String opt, String arg) {
-                task.options.version = true;
-            }
-        },
+            new Option(false, "-version") {
+                void process(JavapTask task, String opt, String arg) {
+                    task.options.version = true;
+                }
+            },
 
-        new Option(false, "-fullversion") {
-            void process(JavapTask task, String opt, String arg) {
-                task.options.fullVersion = true;
-            }
-        },
+            new Option(false, "-fullversion") {
+                void process(JavapTask task, String opt, String arg) {
+                    task.options.fullVersion = true;
+                }
+            },
 
-        new Option(false, "-v", "-verbose", "-all") {
-            void process(JavapTask task, String opt, String arg) {
-                task.options.verbose = true;
-                task.options.showDescriptors = true;
-                task.options.showFlags = true;
-                task.options.showAllAttrs = true;
-            }
-        },
+            new Option(false, "-v", "-verbose", "-all") {
+                void process(JavapTask task, String opt, String arg) {
+                    task.options.verbose = true;
+                    task.options.showDescriptors = true;
+                    task.options.showFlags = true;
+                    task.options.showAllAttrs = true;
+                }
+            },
 
-        new Option(false, "-l") {
-            void process(JavapTask task, String opt, String arg) {
-                task.options.showLineAndLocalVariableTables = true;
-            }
-        },
+            new Option(false, "-l") {
+                void process(JavapTask task, String opt, String arg) {
+                    task.options.showLineAndLocalVariableTables = true;
+                }
+            },
 
-        new Option(false, "-public") {
-            void process(JavapTask task, String opt, String arg) {
-                task.options.accessOptions.add(opt);
-                task.options.showAccess = AccessFlags.ACC_PUBLIC;
-            }
-        },
-
-        new Option(false, "-protected") {
-            void process(JavapTask task, String opt, String arg) {
-                task.options.accessOptions.add(opt);
-                task.options.showAccess = AccessFlags.ACC_PROTECTED;
-            }
-        },
-
-        new Option(false, "-package") {
-            void process(JavapTask task, String opt, String arg) {
-                task.options.accessOptions.add(opt);
-                task.options.showAccess = 0;
-            }
-        },
-
-        new Option(false, "-p", "-private") {
-            void process(JavapTask task, String opt, String arg) {
-                if (!task.options.accessOptions.contains("-p") &&
-                        !task.options.accessOptions.contains("-private")) {
+            new Option(false, "-public") {
+                void process(JavapTask task, String opt, String arg) {
                     task.options.accessOptions.add(opt);
+                    task.options.showAccess = AccessFlags.ACC_PUBLIC;
                 }
-                task.options.showAccess = AccessFlags.ACC_PRIVATE;
-            }
-        },
+            },
 
-        new Option(false, "-c") {
-            void process(JavapTask task, String opt, String arg) {
-                task.options.showDisassembled = true;
-            }
-        },
-
-        new Option(false, "-s") {
-            void process(JavapTask task, String opt, String arg) {
-                task.options.showDescriptors = true;
-            }
-        },
-
-        new Option(false, "-sysinfo") {
-            void process(JavapTask task, String opt, String arg) {
-                task.options.sysInfo = true;
-            }
-        },
-
-        new Option(false, "-XDdetails") {
-            void process(JavapTask task, String opt, String arg) {
-                task.options.details = EnumSet.allOf(InstructionDetailWriter.Kind.class);
-            }
-
-        },
-
-        new Option(false, "-XDdetails:") {
-            @Override
-            boolean matches(String opt) {
-                int sep = opt.indexOf(":");
-                return sep != -1 && super.matches(opt.substring(0, sep + 1));
-            }
-
-            void process(JavapTask task, String opt, String arg) throws BadArgs {
-                int sep = opt.indexOf(":");
-                for (String v: opt.substring(sep + 1).split("[,: ]+")) {
-                    if (!handleArg(task, v))
-                        throw task.new BadArgs("err.invalid.arg.for.option", v);
+            new Option(false, "-protected") {
+                void process(JavapTask task, String opt, String arg) {
+                    task.options.accessOptions.add(opt);
+                    task.options.showAccess = AccessFlags.ACC_PROTECTED;
                 }
-            }
+            },
 
-            boolean handleArg(JavapTask task, String arg) {
-                if (arg.length() == 0)
-                    return true;
+            new Option(false, "-package") {
+                void process(JavapTask task, String opt, String arg) {
+                    task.options.accessOptions.add(opt);
+                    task.options.showAccess = 0;
+                }
+            },
 
-                if (arg.equals("all")) {
+            new Option(false, "-p", "-private") {
+                void process(JavapTask task, String opt, String arg) {
+                    if (!task.options.accessOptions.contains("-p") &&
+                            !task.options.accessOptions.contains("-private")) {
+                        task.options.accessOptions.add(opt);
+                    }
+                    task.options.showAccess = AccessFlags.ACC_PRIVATE;
+                }
+            },
+
+            new Option(false, "-c") {
+                void process(JavapTask task, String opt, String arg) {
+                    task.options.showDisassembled = true;
+                }
+            },
+
+            new Option(false, "-s") {
+                void process(JavapTask task, String opt, String arg) {
+                    task.options.showDescriptors = true;
+                }
+            },
+
+            new Option(false, "-sysinfo") {
+                void process(JavapTask task, String opt, String arg) {
+                    task.options.sysInfo = true;
+                }
+            },
+
+            new Option(false, "-XDdetails") {
+                void process(JavapTask task, String opt, String arg) {
                     task.options.details = EnumSet.allOf(InstructionDetailWriter.Kind.class);
-                    return true;
                 }
 
-                boolean on = true;
-                if (arg.startsWith("-")) {
-                    on = false;
-                    arg = arg.substring(1);
+            },
+
+            new Option(false, "-XDdetails:") {
+                @Override
+                boolean matches(String opt) {
+                    int sep = opt.indexOf(":");
+                    return sep != -1 && super.matches(opt.substring(0, sep + 1));
                 }
 
-                for (InstructionDetailWriter.Kind k: InstructionDetailWriter.Kind.values()) {
-                    if (arg.equalsIgnoreCase(k.option)) {
-                        if (on)
-                            task.options.details.add(k);
-                        else
-                            task.options.details.remove(k);
-                        return true;
+                void process(JavapTask task, String opt, String arg) throws BadArgs {
+                    int sep = opt.indexOf(":");
+                    for (String v : opt.substring(sep + 1).split("[,: ]+")) {
+                        if (!handleArg(task, v))
+                            throw task.new BadArgs("err.invalid.arg.for.option", v);
                     }
                 }
-                return false;
-            }
-        },
 
-        new Option(false, "-constants") {
-            void process(JavapTask task, String opt, String arg) {
-                task.options.showConstants = true;
-            }
-        },
+                boolean handleArg(JavapTask task, String arg) {
+                    if (arg.length() == 0)
+                        return true;
 
-        new Option(false, "-XDinner") {
-            void process(JavapTask task, String opt, String arg) {
-                task.options.showInnerClasses = true;
-            }
-        },
+                    if (arg.equals("all")) {
+                        task.options.details = EnumSet.allOf(InstructionDetailWriter.Kind.class);
+                        return true;
+                    }
 
-        new Option(false, "-XDindent:") {
-            @Override
-            boolean matches(String opt) {
-                int sep = opt.indexOf(":");
-                return sep != -1 && super.matches(opt.substring(0, sep + 1));
-            }
+                    boolean on = true;
+                    if (arg.startsWith("-")) {
+                        on = false;
+                        arg = arg.substring(1);
+                    }
 
-            void process(JavapTask task, String opt, String arg) throws BadArgs {
-                int sep = opt.indexOf(":");
-                try {
-                    int i = Integer.valueOf(opt.substring(sep + 1));
-                    if (i > 0) // silently ignore invalid values
-                        task.options.indentWidth = i;
-                } catch (NumberFormatException e) {
+                    for (InstructionDetailWriter.Kind k : InstructionDetailWriter.Kind.values()) {
+                        if (arg.equalsIgnoreCase(k.option)) {
+                            if (on)
+                                task.options.details.add(k);
+                            else
+                                task.options.details.remove(k);
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            },
+
+            new Option(false, "-constants") {
+                void process(JavapTask task, String opt, String arg) {
+                    task.options.showConstants = true;
+                }
+            },
+
+            new Option(false, "-XDinner") {
+                void process(JavapTask task, String opt, String arg) {
+                    task.options.showInnerClasses = true;
+                }
+            },
+
+            new Option(false, "-XDindent:") {
+                @Override
+                boolean matches(String opt) {
+                    int sep = opt.indexOf(":");
+                    return sep != -1 && super.matches(opt.substring(0, sep + 1));
+                }
+
+                void process(JavapTask task, String opt, String arg) throws BadArgs {
+                    int sep = opt.indexOf(":");
+                    try {
+                        int i = Integer.valueOf(opt.substring(sep + 1));
+                        if (i > 0) // silently ignore invalid values
+                            task.options.indentWidth = i;
+                    } catch (NumberFormatException e) {
+                    }
+                }
+            },
+
+            new Option(false, "-XDtab:") {
+                @Override
+                boolean matches(String opt) {
+                    int sep = opt.indexOf(":");
+                    return sep != -1 && super.matches(opt.substring(0, sep + 1));
+                }
+
+                void process(JavapTask task, String opt, String arg) throws BadArgs {
+                    int sep = opt.indexOf(":");
+                    try {
+                        int i = Integer.valueOf(opt.substring(sep + 1));
+                        if (i > 0) // silently ignore invalid values
+                            task.options.tabColumn = i;
+                    } catch (NumberFormatException e) {
+                    }
                 }
             }
-        },
-
-        new Option(false, "-XDtab:") {
-            @Override
-            boolean matches(String opt) {
-                int sep = opt.indexOf(":");
-                return sep != -1 && super.matches(opt.substring(0, sep + 1));
-            }
-
-            void process(JavapTask task, String opt, String arg) throws BadArgs {
-                int sep = opt.indexOf(":");
-                try {
-                    int i = Integer.valueOf(opt.substring(sep + 1));
-                    if (i > 0) // silently ignore invalid values
-                        task.options.tabColumn = i;
-                } catch (NumberFormatException e) {
-                }
-            }
-        }
 
     };
 
@@ -309,8 +306,8 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
     }
 
     public JavapTask(Writer out,
-            JavaFileManager fileManager,
-            DiagnosticListener<? super JavaFileObject> diagnosticListener) {
+                     JavaFileManager fileManager,
+                     DiagnosticListener<? super JavaFileObject> diagnosticListener) {
         this();
         this.log = getPrintWriterForWriter(out);
         this.fileManager = fileManager;
@@ -318,14 +315,14 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
     }
 
     public JavapTask(Writer out,
-            JavaFileManager fileManager,
-            DiagnosticListener<? super JavaFileObject> diagnosticListener,
-            Iterable<String> options,
-            Iterable<String> classes) {
+                     JavaFileManager fileManager,
+                     DiagnosticListener<? super JavaFileObject> diagnosticListener,
+                     Iterable<String> options,
+                     Iterable<String> classes) {
         this(out, fileManager, diagnosticListener);
 
         this.classes = new ArrayList<String>();
-        for (String classname: classes) {
+        for (String classname : classes) {
             classname.getClass(); // null-check
             this.classes.add(classname);
         }
@@ -379,7 +376,7 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
 
     private DiagnosticListener<JavaFileObject> getDiagnosticListenerForWriter(Writer w) {
         final PrintWriter pw = getPrintWriterForWriter(w);
-        return new DiagnosticListener<JavaFileObject> () {
+        return new DiagnosticListener<JavaFileObject>() {
             public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
                 switch (diagnostic.getKind()) {
                     case ERROR:
@@ -398,14 +395,15 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
         };
     }
 
-    /** Result codes.
+    /**
+     * Result codes.
      */
     static final int
-        EXIT_OK = 0,        // Compilation completed with no errors.
-        EXIT_ERROR = 1,     // Completed but reported errors.
-        EXIT_CMDERR = 2,    // Bad command-line arguments
-        EXIT_SYSERR = 3,    // System error or resource exhaustion.
-        EXIT_ABNORMAL = 4;  // Compiler terminated abnormally
+            EXIT_OK = 0,        // Compilation completed with no errors.
+            EXIT_ERROR = 1,     // Completed but reported errors.
+            EXIT_CMDERR = 2,    // Bad command-line arguments
+            EXIT_SYSERR = 3,    // System error or resource exhaustion.
+            EXIT_ABNORMAL = 4;  // Compiler terminated abnormally
 
     int run(String[] args) {
         try {
@@ -461,10 +459,10 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
         if (log == null) {
             log = getPrintWriterForStream(System.out);
             if (diagnosticListener == null)
-              diagnosticListener = getDiagnosticListenerForStream(System.err);
+                diagnosticListener = getDiagnosticListenerForStream(System.err);
         } else {
             if (diagnosticListener == null)
-              diagnosticListener = getDiagnosticListenerForWriter(log);
+                diagnosticListener = getDiagnosticListenerForWriter(log);
         }
 
 
@@ -490,7 +488,7 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
 
         if (options.accessOptions.size() > 1) {
             StringBuilder sb = new StringBuilder();
-            for (String opt: options.accessOptions) {
+            for (String opt : options.accessOptions) {
                 if (sb.length() > 0)
                     sb.append(" ");
                 sb.append(opt);
@@ -511,7 +509,7 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
     }
 
     private void handleOption(String name, Iterator<String> rest) throws BadArgs {
-        for (Option o: recognizedOptions) {
+        for (Option o : recognizedOptions) {
             if (o.matches(name)) {
                 if (o.hasArg) {
                     if (rest.hasNext())
@@ -555,7 +553,7 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
 
         int result = EXIT_OK;
 
-        for (String className: classes) {
+        for (String className : classes) {
             try {
                 result = writeClass(classWriter, className);
             } catch (ConstantPoolException e) {
@@ -743,6 +741,7 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
             this.digest = digest;
             this.size = size;
         }
+
         public final JavaFileObject fo;
         public final ClassFile cf;
         public final byte[] digest;
@@ -753,7 +752,7 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
         InputStream in = fo.openInputStream();
         try {
             SizeInputStream sizeIn = null;
-            MessageDigest md  = null;
+            MessageDigest md = null;
             if (options.sysInfo || options.verbose) {
                 try {
                     md = MessageDigest.getInstance("MD5");
@@ -835,7 +834,7 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
 
     private JavaFileManager getDefaultFileManager(final DiagnosticListener<? super JavaFileObject> dl, PrintWriter log) {
         if (defaultFileManager == null)
-            defaultFileManager = JavapFileManager.create(dl, log);
+            defaultFileManager = ToolProvider.getSystemJavaCompiler().getStandardFileManager(null, null, null);
         return defaultFileManager;
     }
 
@@ -849,14 +848,14 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
 
     private void showHelp() {
         printLines(getMessage("main.usage", progname));
-        for (Option o: recognizedOptions) {
+        for (Option o : recognizedOptions) {
             String name = o.aliases[0].substring(1); // there must always be at least one name
             if (name.startsWith("X") || name.equals("fullversion") || name.equals("h") || name.equals("verify"))
                 continue;
             printLines(getMessage("main.opt." + name));
         }
-        String[] fmOptions = { "-classpath", "-cp", "-bootclasspath" };
-        for (String o: fmOptions) {
+        String[] fmOptions = {"-classpath", "-cp", "-bootclasspath"};
+        for (String o : fmOptions) {
             if (fileManager.isSupportedOption(o) == -1)
                 continue;
             String name = o.substring(1);
@@ -890,8 +889,7 @@ public class JavapTask implements DisassemblerTool.DisassemblerTask, Messages {
         }
         try {
             return versionRB.getString(key);
-        }
-        catch (MissingResourceException e) {
+        } catch (MissingResourceException e) {
             return getMessage("version.unknown", System.getProperty("java.version"));
         }
     }
